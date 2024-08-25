@@ -1,42 +1,61 @@
 const express = require('express');
-const bodyParser = require('body-parser');
 const app = express();
-const port = process.env.PORT || 3000;
-app.use(bodyParser.json());
-app.get('/bfhl', (req, res) => {
-  const operationCode = 1;
-  res.json({operation_code: operationCode });
-});
+const http = require("http").createServer(app)
+const cors = require("cors")
+
+app.use(express.json());
+app.use(cors());
+const userDetails = {
+    user_id: "john_doe_17091999",
+    email: "john@xyz.com",
+    roll_number: "ABCD123"
+};
+
 app.post('/bfhl', (req, res) => {
-    const d=req.body.data;
-    console.log(d);
-    var alpha=[]
-    var nums=[]
-    var hgh="";
-    for(var i=0;i<d.length;i++){
-        var chk= parseInt(d[i]);
-        if(!isNaN(chk)){
-            nums.push(chk);
-        }
-        else{
-            alpha.push(d[i]);
-            if(hgh==""&&d[i].toLowerCase()==d[i])hgh=d[i];
-            if(hgh>d[i]&&d[i].toLowerCase()==d[i])hgh=d[i];
-        }
-    }
-  
+    const { data } = req.body;
 
-  res.json({
-    is_success: true,
-    user_id: "shivank_pandey_18072003",
-    email :"shivank.pandey2021@vitstudent.ac.in",
-    roll_number:"21BKT0021",
-    numbers: nums,
-    alphabets: alpha,
-    "highest_lowercase_alphabet":hgh
-  });
+    if (!data || !Array.isArray(data)) {
+        return res.status(400).json({
+            is_success: false,
+            message: "Invalid input"
+        });
+    }
+
+    const numbers = [];
+    const alphabets = [];
+    let highestLowercaseAlphabet = '';
+
+    data.forEach(item => {
+        if (!isNaN(item)) {
+            numbers.push(item);
+        } else if (typeof item === 'string') {
+            alphabets.push(item);
+            if (item >= 'a' && item <= 'z') {
+                if (!highestLowercaseAlphabet || item > highestLowercaseAlphabet) {
+                    highestLowercaseAlphabet = item;
+                }
+            }
+        }
+    });
+
+    res.json({
+        is_success: true,
+        user_id: userDetails.user_id,
+        email: userDetails.email,
+        roll_number: userDetails.roll_number,
+        numbers,
+        alphabets,
+        highest_lowercase_alphabet: highestLowercaseAlphabet ? [highestLowercaseAlphabet] : []
+    });
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+app.get('/bfhl', (req, res) => {
+    res.status(200).json({
+        operation_code: 1
+    });
+});
+
+const PORT = process.env.PORT || 3000;
+http.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
 });
